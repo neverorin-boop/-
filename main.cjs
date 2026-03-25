@@ -8,6 +8,7 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
+      nativeWindowOpen: true, // Позволяет Firebase открывать всплывающие окна
     },
     icon: path.join(__dirname, 'public/favicon.ico') // Если есть иконка
   });
