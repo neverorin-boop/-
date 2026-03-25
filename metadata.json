@@ -1,0 +1,5 @@
+{
+  "name": "Nexus Bank",
+  "description": "A secure, modern banking interface featuring Google authentication and a visual PIN entry system.",
+  "requestFramePermissions": []
+}

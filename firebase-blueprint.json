@@ -1,0 +1,44 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile and account information.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "The unique identifier for the user." },
+        "email": { "type": "string", "format": "email", "description": "The user's email address." },
+        "displayName": { "type": "string", "description": "The user's display name." },
+        "photoURL": { "type": "string", "format": "uri", "description": "The user's profile picture URL." },
+        "balance": { "type": "number", "description": "The current account balance." },
+        "points": { "type": "number", "description": "Loyalty or reward points." },
+        "creditScore": { "type": "number", "description": "The user's credit score (300-850)." },
+        "pin": { "type": "string", "description": "The user's 4-digit PIN (hashed or stored as string for demo)." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the user account was created." }
+      },
+      "required": ["uid", "email", "balance"]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "A single banking transaction.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "The ID of the user who owns this transaction." },
+        "amount": { "type": "number", "description": "The transaction amount." },
+        "type": { "type": "string", "enum": ["credit", "debit"], "description": "The type of transaction." },
+        "description": { "type": "string", "description": "A description of the transaction." },
+        "timestamp": { "type": "string", "format": "date-time", "description": "When the transaction occurred." }
+      },
+      "required": ["userId", "amount", "type", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Stores user profile and account details."
+    },
+    "/users/{userId}/transactions/{transactionId}": {
+      "schema": "Transaction",
+      "description": "Stores transaction history for a specific user."
+    }
+  }
+}
