@@ -128,10 +128,23 @@ const LoginScreen = ({ onLogin }: { onLogin: (user: any) => void }) => {
     if (loading) return;
     setLoading(true);
     setError('');
+    
+    // Detect Electron environment
+    const isElectron = navigator.userAgent.includes('Electron');
+    
     try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const user = result.user;
+      if (isElectron) {
+        console.log('Electron detected. Attempting login...');
+      }
+
+      let user = auth.currentUser;
+      if (!user) {
+        const result = await signInWithPopup(auth, googleProvider);
+        user = result.user;
+      }
       
+      if (!user) throw new Error('No user found after login attempt.');
+
       // Check if user exists in Firestore
       const userDoc = await getDoc(doc(db, 'users', user.uid));
       
@@ -161,10 +174,15 @@ const LoginScreen = ({ onLogin }: { onLogin: (user: any) => void }) => {
     } catch (err: any) {
       console.error(err);
       if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
-        // User closed the popup or cancelled, no need to show a big error
         return;
       }
-      setError('Failed to login. Please try again.');
+      if (err.code === 'auth/unauthorized-domain') {
+        setError('This domain is not authorized for Google Login. Please add it in Firebase Console.');
+      } else if (err.code === 'auth/operation-not-supported-in-this-environment') {
+        setError('Google Login is not supported in this environment (likely Electron). Please use the web version or check configuration.');
+      } else {
+        setError(err.message || 'Failed to login. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -784,9 +802,18 @@ export default function App() {
           const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
           if (userDoc.exists()) {
             setUser(userDoc.data() as UserData);
+          } else {
+            // User is logged in but no profile exists yet. 
+            // This could happen if they closed the app during registration.
+            // We'll set a minimal user state to allow the app to function or trigger creation.
+            console.log('User logged in but no Firestore profile found.');
+            // We don't set user here to avoid showing dashboard without data,
+            // but we stop loading so LoginScreen can handle it.
+            setUser(null);
           }
         } catch (err) {
-          console.error(err);
+          console.error('Error fetching user profile:', err);
+          setUser(null);
         }
       } else {
         setUser(null);

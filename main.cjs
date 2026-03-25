@@ -8,9 +8,16 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
-      nativeWindowOpen: true, // Позволяет Firebase открывать всплывающие окна
     },
-    icon: path.join(__dirname, 'public/favicon.ico') // Если есть иконка
+    icon: path.join(__dirname, 'public/favicon.ico')
+  });
+
+  // Set a standard user agent to avoid Google Auth blocks
+  win.webContents.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+
+  // Modern way to handle popups in Electron (for Firebase Auth)
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    return { action: 'allow' };
   });
 
   // В разработке загружаем с локального сервера Vite
