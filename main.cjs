@@ -1,23 +1,38 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, session } = require('electron');
 const path = require('path');
 
 function createWindow() {
+  // Настройка сессии для подмены User-Agent во всех запросах
+  session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
+    details.requestHeaders['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36';
+    callback({ cancel: false, requestHeaders: details.requestHeaders });
+  });
+
   const win = new BrowserWindow({
     width: 1200,
     height: 800,
     webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false,
+      nodeIntegration: false, // Рекомендуется false для безопасности
+      contextIsolation: true, // Рекомендуется true
+      sandbox: false, // Нужно для некоторых функций Firebase в Electron
     },
     icon: path.join(__dirname, 'public/favicon.ico')
   });
 
-  // Set a standard user agent to avoid Google Auth blocks
-  win.webContents.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+  // Устанавливаем User-Agent и для самого окна
+  win.webContents.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36');
 
-  // Modern way to handle popups in Electron (for Firebase Auth)
+  // Разрешаем открытие окон (для Google Auth)
   win.webContents.setWindowOpenHandler(({ url }) => {
-    return { action: 'allow' };
+    return { 
+      action: 'allow',
+      overrideBrowserWindowOptions: {
+        webPreferences: {
+          sandbox: false,
+          contextIsolation: true,
+        }
+      }
+    };
   });
 
   // В разработке загружаем с локального сервера Vite
